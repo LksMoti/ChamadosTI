@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useLocation } from 'react-router';
 import { ArrowLeft, Clock, Tag, MessageSquare, Send, User, Calendar, Loader2, AlertCircle, Edit2, Save, X } from 'lucide-react';
 import { useTechnicianData } from '../../contexts/TechnicianDataContext';
 
@@ -53,14 +53,21 @@ interface Comentario {
 }
 
 interface DetalhesData {
-  chamado: Chamado;
   comentarios: Comentario[];
+}
+
+interface LocationState {
+  chamado?: Chamado;
 }
 
 export function TechnicianTicketDetails() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const chamadoFromState = (location.state as LocationState)?.chamado;
+
   const { data: dashboardData, refetch } = useTechnicianData();
-  const [data, setData] = useState<DetalhesData | null>(null);
+  const [chamado, setChamado] = useState<Chamado | null>(chamadoFromState || null);
+  const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
@@ -69,9 +76,9 @@ export function TechnicianTicketDetails() {
   
   // Estados para edição
   const [isEditing, setIsEditing] = useState(false);
-  const [editedStatus, setEditedStatus] = useState<number>(0);
-  const [editedPriority, setEditedPriority] = useState<number>(0);
-  const [editedResponsible, setEditedResponsible] = useState<number | null>(null);
+  const [editedStatus, setEditedStatus] = useState<number>(chamadoFromState?.codStatus || 0);
+  const [editedPriority, setEditedPriority] = useState<number>(chamadoFromState?.codPrioridade || 0);
+  const [editedResponsible, setEditedResponsible] = useState<number | null>(chamadoFromState?.codUserResponsavel || null);
   const [saving, setSaving] = useState(false);
 
   // Estados para opções dos dropdowns
@@ -81,7 +88,7 @@ export function TechnicianTicketDetails() {
   const [technicianOptions, setTechnicianOptions] = useState<Responsavel[]>([]);
   const [technicianIds, setTechnicianIds] = useState<Set<number>>(new Set());
 
-  // Buscar detalhes do chamado
+  // Buscar apenas comentários do chamado
   const fetchTicketDetails = () => {
     setLoading(true);
     fetch(`https://www.fitacabo.ddns.com.br/api/chamados/detalhes/${id}`)
@@ -92,15 +99,12 @@ export function TechnicianTicketDetails() {
           } else if (response.status === 403) {
             throw new Error('Você não tem permissão para acessar este chamado');
           }
-          throw new Error('Erro ao buscar detalhes do chamado');
+          throw new Error('Erro ao buscar comentários do chamado');
         }
         return response.json();
       })
       .then((data: DetalhesData) => {
-        setData(data);
-        setEditedStatus(data.chamado.codStatus);
-        setEditedPriority(data.chamado.codPrioridade);
-        setEditedResponsible(data.chamado.codUserResponsavel);
+        setComentarios(data.comentarios);
         setLoading(false);
       })
       .catch((err) => {
@@ -167,7 +171,7 @@ export function TechnicianTicketDetails() {
   };
 
   const handleSaveChanges = async () => {
-    if (!data) return;
+    if (!chamado) return;
 
     setSaving(true);
     setSubmitError(null);
@@ -191,7 +195,26 @@ export function TechnicianTicketDetails() {
         throw new Error(responseData.mensagem || 'Erro ao atualizar chamado');
       }
 
-      // Recarregar dados e sair do modo de edição
+      // Atualizar chamado localmente com os novos valores
+      const newStatus = statusOptions.find(s => s.codigo === editedStatus);
+      const newPriority = priorityOptions.find(p => p.codigo === editedPriority);
+      const newResponsavel = editedResponsible
+        ? technicianOptions.find(t => t.codigo === editedResponsible) || null
+        : null;
+
+      if (chamado && newStatus && newPriority) {
+        setChamado({
+          ...chamado,
+          codStatus: editedStatus,
+          codPrioridade: editedPriority,
+          codUserResponsavel: editedResponsible,
+          status: newStatus,
+          prioridade: { ...chamado.prioridade, ...newPriority },
+          responsavel: newResponsavel,
+        });
+      }
+
+      // Recarregar comentários e sair do modo de edição
       fetchTicketDetails();
       refetch(); // Atualiza o dashboard também
       setIsEditing(false);
@@ -203,11 +226,11 @@ export function TechnicianTicketDetails() {
   };
 
   const handleCancelEdit = () => {
-    if (!data) return;
+    if (!chamado) return;
     
-    setEditedStatus(data.chamado.codStatus);
-    setEditedPriority(data.chamado.codPrioridade);
-    setEditedResponsible(data.chamado.codUserResponsavel);
+    setEditedStatus(chamado.codStatus);
+    setEditedPriority(chamado.codPrioridade);
+    setEditedResponsible(chamado.codUserResponsavel);
     setIsEditing(false);
     setSubmitError(null);
   };
@@ -310,11 +333,9 @@ export function TechnicianTicketDetails() {
     );
   }
 
-  if (!data) {
+  if (!chamado) {
     return null;
   }
-
-  const { chamado, comentarios } = data;
 
   // Função auxiliar para determinar a cor dos badges
   const getPriorityColor = (descricao: string) => {

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { Search, Filter, Clock, User, Tag, Loader2, MessageSquare, AlertCircle } from 'lucide-react';
 import { useTechnicianData } from '../../contexts/TechnicianDataContext';
 
 export function TechnicianTickets() {
   const { data, loading, error } = useTechnicianData();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -245,7 +246,8 @@ export function TechnicianTickets() {
             return (
               <Link
                 key={ticket.codigo}
-                to={`/tecnico/chamado/${ticket.codigo}`}
+                to={`/tecnico/chamado/${ticket.codigo}${location.search}`}
+                state={{ chamado: ticket }}
                 className="group block bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-purple-400 hover:shadow-lg transition-all duration-200"
               >
                 <div className="flex flex-col lg:flex-row gap-5">

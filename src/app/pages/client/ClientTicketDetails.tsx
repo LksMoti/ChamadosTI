@@ -437,10 +437,10 @@ export function ClientTicketDetails() {
           </form>
         )}
 
-        {(chamado.codStatus === 4 || chamado.codStatus === 5) && (
+        {(chamado.codStatus === 6 || chamado.codStatus === 6) && (
           <div className="bg-green-50 rounded-lg p-4 text-center border border-green-200">
             <p className="text-green-800 font-medium">
-              Este chamado foi {chamado.codStatus === 4 ? 'resolvido' : 'fechado'}
+              Este chamado foi {chamado.codStatus === 6? 'resolvido' : 'fechado'}
             </p>
             <p className="text-sm text-green-700 mt-1">
               Caso precise de ajuda adicional, abra um novo chamado

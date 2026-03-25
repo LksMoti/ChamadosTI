@@ -262,6 +262,7 @@ export function TechnicianDashboard() {
                   <Link
                     key={ticket.codigo}
                     to={`/tecnico/chamado/${ticket.codigo}`}
+                    state={{ chamado: ticket }}
                     className="block p-4 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors"
                   >
                     <div className="flex items-start justify-between">

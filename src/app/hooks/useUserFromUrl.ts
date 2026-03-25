@@ -24,15 +24,15 @@ export function useUserFromUrl(): UserParams {
 
     // VALORES FIXOS PARA DESENVOLVIMENTO
     // Quando publicar, remova estas linhas e deixe apenas o return acima
-    const MODO_DESENVOLVIMENTO = true; // Mude para false quando publicar
+    //const MODO_DESENVOLVIMENTO = true; // Mude para false quando publicar
     
-    if (MODO_DESENVOLVIMENTO) {
-      return {
-        coduser: '190',
-        codsetor: '35',
-        nome: 'Luis',
-      };
-    }
+    // if (MODO_DESENVOLVIMENTO) {
+    //   return {
+    //     coduser: '190',
+    //     codsetor: '35',
+    //     nome: 'Luis',
+    //   };
+    // }
 
     // MODO PRODUÇÃO: Pega da URL ou usa fallback
     return {
@@ -40,5 +40,6 @@ export function useUserFromUrl(): UserParams {
       codsetor: codsetorFromUrl || '35',
       nome: nomeFromUrl ? decodeURIComponent(nomeFromUrl) : 'Luis',
     };
+
   }, []);
 }

@@ -1,9 +1,14 @@
-import { Link, Outlet, useLocation } from 'react-router';
+import { Link, Outlet, useLocation, Navigate } from 'react-router';
 import { LayoutDashboard, List, Ticket, ArrowLeft } from 'lucide-react';
 import { TechnicianDataProvider } from '../contexts/TechnicianDataContext';
 
 export function TechnicianLayout() {
   const location = useLocation();
+  const codsetor = new URLSearchParams(location.search).get('codsetor');
+
+  if (codsetor !== '35') {
+    return <Navigate to={`/${location.search}`} replace />;
+  }
 
   const isActive = (path: string) => {
     if (path === '/tecnico') {
